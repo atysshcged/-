@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Javaプログラミング学習アプリ (デモ版)</title>
+  <!-- Google Fonts & Font Awesome Icons -->
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <style>
+    :root {
+      --bg-primary: #0f172a;
+      --bg-secondary: #1e293b;
+      --bg-tertiary: #334155;
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --accent: #38bdf8;
+      --accent-hover: #0284c7;
+      --success: #22c55e;
+      --error: #ef4444;
+      --warning: #f59e0b;
+      --border: #475569;
+      --editor-bg: #111827;
+      --card-bg: #1e293b;
+    }
+
+    [data-theme="light"] {
+      --bg-primary: #f8fafc;
+      --bg-secondary: #ffffff;
+      --bg-tertiary: #e2e8f0;
+      --text-primary: #0f172a;
+      --text-secondary: #64748b;
+      --accent: #0284c7;
+      --accent-hover: #0369a1;
+      --success: #16a34a;
+      --error: #dc2626;
+      --warning: #d97706;
+      --border: #cbd5e1;
+      --editor-bg: #1e293b;
+      --card-bg: #ffffff;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Header */
+    header {
+      background-color: var(--bg-secondary);
+      border-bottom: 1px solid var(--border);
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .logo i {
+      font-size: 1.5rem;
+      color: #f97316; /* Java Orange */
+    }
+
+    .header-controls {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+    }
+
+    .progress-overview {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      background: var(--bg-tertiary);
+      padding: 0.4rem 0.8rem;
+      border-radius: 20px;
+      font-size: 0.85rem;
+    }
+
+    .progress-bar-mini {
+      width: 80px;
+      height: 8px;
+      background: var(--bg-primary);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .progress-fill-mini {
+      height: 100%;
+      background: var(--success);
+      width: 0%;
+      transition: width 0.4s ease;
+    }
+
+    .theme-toggle {
+      background: none;
+      border: none;
+      color: var(--text-primary);
+      font-size: 1.2rem;
+      cursor: pointer;
+      padding: 0.5rem;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .theme-toggle:hover {
+      background-color: var(--bg-tertiary);
+    }
+
+    /* Main Container */
+    .app-container {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* Sidebar Navigation */
+    sidebar {
+      width: 280px;
+      background-color: var(--bg-secondary);
+      border-right: 1px solid var(--border);
+      padding: 1.5rem 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .sidebar-title {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-secondary);
+      margin-left: 0.5rem;
+    }
+
+    .module-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .module-item {
+      padding: 0.8rem 1rem;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: var(--text-secondary);
+      font-size: 0.95rem;
+      font-weight: 500;
+    }
+
+    .module-item:hover {
+      background-color: var(--bg-tertiary);
+      color: var(--text-primary);
+    }
+
+    .module-item.active {
+      background-color: var(--accent);
+      color: #ffffff;
+    }
+
+    .module-item .status-icon {
+      font-size: 0.9rem;
+    }
+
+    .badges-section {
+      margin-top: auto;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border);
+    }
+
+    .badge-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.5rem;
+      margin-top: 0.75rem;
+    }
+
+    .badge-item {
+      background: var(--bg-tertiary);
+      aspect-ratio: 1;
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      opacity: 0.3;
+      filter: grayscale(1);
+      position: relative;
+    }
+
+    .badge-item.unlocked {
+      opacity: 1;
+      filter: grayscale(0);
+      background: rgba(56, 189, 248, 0.15);
+      border: 1px solid var(--accent);
+    }
+
+    .badge-item .badge-tooltip {
+      visibility: hidden;
+      position: absolute;
+      bottom: 110%;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: #000;
+      color: #fff;
+      text-align: center;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 0.7rem;
+      white-space: nowrap;
+      z-index: 10;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .badge-item:hover .badge-tooltip {
+      visibility: visible;
+      opacity: 1;
+    }
+
+    /* Main Content Area */
+    main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      padding: 2rem;
+      gap: 2rem;
+    }
+
+    .content-card {
+      background-color: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+    }
+
+    .module-header {
+      margin-bottom: 1rem;
+    }
+
+    .module-header h2 {
+      font-size: 1.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .module-description {
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+
+    /* Workspace (Editor + Output) */
+    .workspace {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      min-height: 400px;
+    }
+
+    @media (max-width: 900px) {
+      .app-container {
+        flex-direction: column;
+      }
+      sidebar {
+        width: 100%;
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+      }
+      .workspace {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .editor-container, .output-container {
+      display: flex;
+      flex-direction: column;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      background-color: var(--editor-bg);
+    }
+
+    .pane-header {
+      background-color: rgba(0, 0, 0, 0.2);
+      padding: 0.6rem 1rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #94a3b8;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+    }
+
+    textarea.code-editor {
+      width: 100%;
+      flex: 1;
+      background: transparent;
+      color: #f8fafc;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.95rem;
+      padding: 1rem;
+      border: none;
+      resize: none;
+      outline: none;
+      line-height: 1.5;
+    }
+
+    .output-box {
+      padding: 1rem;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.9rem;
+      color: #a7f3d0;
+      flex: 1;
+      white-space: pre-wrap;
+      overflow-y: auto;
+    }
+
+    .btn {
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      border: none;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.85rem;
+    }
+
+    .btn-primary {
+      background-color: var(--accent);
+      color: #ffffff;
+    }
+
+    .btn-primary:hover {
+      background-color: var(--accent-hover);
+    }
+
+    .btn-secondary {
+      background-color: var(--bg-tertiary);
+      color: var(--text-primary);
+    }
+
+    .btn-secondary:hover {
+      opacity: 0.8;
+    }
+
+    /* Quiz Container */
+    .quiz-container {
+      margin-top: 1rem;
+    }
+
+    .quiz-question {
+      font-weight: 600;
+      margin-bottom: 1rem;
+    }
+
+    .quiz-options {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .quiz-option {
+      padding: 0.8rem 1rem;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .quiz-option:hover {
+      border-color: var(--accent);
+    }
+
+    .quiz-option.correct {
+      background-color: rgba(34, 197, 94, 0.2);
+      border-color: var(--success);
+    }
+
+    .quiz-option.incorrect {
+      background-color: rgba(239, 68, 68, 0.2);
+      border-color: var(--error);
+    }
+
+    .feedback-msg {
+      margin-top: 1rem;
+      font-size: 0.9rem;
+      font-weight: 600;
+      display: none;
+    }
+
+    .feedback-msg.show {
+      display: block;
+    }
+
+    .feedback-msg.success {
+      color: var(--success);
+    }
+
+    .feedback-msg.error {
+      color: var(--error);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <div class="logo">
+      <i class="fa-brands fa-java"></i>
+      <span>Java Code Learner</span>
+    </div>
+    <div class="header-controls">
+      <div class="progress-overview">
+        <span>進捗度</span>
+        <div class="progress-bar-mini">
+          <div class="progress-fill-mini" id="progressFill"></div>
+        </div>
+        <span id="progressText">0%</span>
+      </div>
+      <button class="theme-toggle" id="themeToggle" title="テーマ切り替え">
+        <i class="fa-solid fa-moon"></i>
+      </button>
+    </div>
+  </header>
+
+  <div class="app-container">
+    <!-- Sidebar -->
+    <sidebar>
+      <div class="sidebar-title">学習モジュール</div>
+      <ul class="module-list" id="moduleList">
+        <!-- JSで動的生成 -->
+      </ul>
+
+      <div class="badges-section">
+        <div class="sidebar-title">獲得バッジ</div>
+        <div class="badge-grid" id="badgeGrid">
+          <!-- JSで動的生成 -->
+        </div>
+      </div>
+    </sidebar>
+
+    <!-- Main Content Area -->
+    <main>
+      <div class="content-card">
+        <div class="module-header">
+          <h2 id="moduleTitle">モジュールタイトル</h2>
+          <p class="module-description" id="moduleDesc">説明文がここに入ります。</p>
+        </div>
+      </div>
+
+      <!-- Live Code Workspace -->
+      <div class="workspace">
+        <div class="editor-container">
+          <div class="pane-header">
+            <span><i class="fa-solid fa-code"></i> Java エディタ</span>
+            <button class="btn btn-secondary" id="resetCodeBtn"><i class="fa-solid fa-rotate-left"></i> リセット</button>
+          </div>
+          <textarea class="code-editor" id="codeEditor" spellcheck="false"></textarea>
+        </div>
+
+        <div class="output-container">
+          <div class="pane-header">
+            <span><i class="fa-solid fa-terminal"></i> 実行結果 (Console)</span>
+            <button class="btn btn-primary" id="runCodeBtn"><i class="fa-solid fa-play"></i> 実行する</button>
+          </div>
+          <div class="output-box" id="outputBox">// ここに実行結果が表示されます</div>
+        </div>
+      </div>
+
+      <!-- Interactive Quiz Section -->
+      <div class="content-card">
+        <div class="module-header">
+          <h2><i class="fa-solid fa-circle-question"></i> 理解度チェッククイズ</h2>
+        </div>
+        <div class="quiz-container">
+          <div class="quiz-question" id="quizQuestion">問題文</div>
+          <div class="quiz-options" id="quizOptions">
+            <!-- JSで選択肢を生成 -->
+          </div>
+          <div class="feedback-msg" id="quizFeedback"></div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    // --- モジュールデータ定義 ---
+    const modules = [
+      {
+        id: 'variables',
+        title: '1. 変数とデータ型',
+        badge: 'Variables Champion',
+        badgeIcon: 'fa-cube',
+        desc: 'Javaでは変数を使う前に、どのような種類のデータ（数値・文字など）を入れるか「型」を指定する必要があります。`int`は整数、`String`は文字列を表します。',
+        initialCode: `public class Main {
+    public static void main(String[] args) {
+        int age = 20;
+        String name = "Java太郎";
+        
+        System.out.println(name + "の年齢は " + age + " 歳です。");
+    }
+}`,
+        expectedOutput: "Java太郎の年齢は 20 歳です。",
+        quiz: {
+          question: "Javaで整数を扱うのに適した基本の型（データ型）はどれでしょうか？",
+          options: ["String", "int", "boolean", "double"],
+          correct: 1
+        }
+      },
+      {
+        id: 'conditions',
+        title: '2. 条件分岐 (if文)',
+        badge: 'Logic Master',
+        badgeIcon: 'fa-code-branch',
+        desc: '`if`文を使うと、条件に応じてプログラムの処理を切り替えることができます。条件が成り立たない場合は `else` の処理が実行されます。',
+        initialCode: `public class Main {
+    public static void main(String[] args) {
+        int score = 85;
+        
+        if (score >= 80) {
+            System.out.println("合格！素晴らしい成績です。");
+        } else {
+            System.out.println("不合格です。次回がんばりましょう！");
+        }
+    }
+}`,
+        expectedOutput: "合格！素晴らしい成績です。",
+        quiz: {
+          question: "2つの値が「等しい」ことを確認する比較演算子はどれでしょうか？",
+          options: ["=", "==", "===", "!="],
+          correct: 1
+        }
+      },
+      {
+        id: 'loops',
+        title: '3. 繰り返し処理 (for文)',
+        badge: 'Loop Wizard',
+        badgeIcon: 'fa-rotate',
+        desc: '同じ処理を何度も繰り返したいときは `for` 文を使います。カウンター変数の初期値、継続条件、増減値を指定します。',
+        initialCode: `public class Main {
+    public static void main(String[] args) {
+        for (int i = 1; i <= 3; i++) {
+            System.out.println("カウント: " + i);
+        }
+    }
+}`,
+        expectedOutput: "カウント: 1\nカウント: 2\nカウント: 3",
+        quiz: {
+          question: "for (int i = 0; i < 5; i++) のル—プは何回実行されるでしょうか？",
+          options: ["4回", "5回", "6回", "無限回"],
+          correct: 1
+        }
+      },
+      {
+        id: 'methods',
+        title: '4. メソッドの作成',
+        badge: 'Method Architect',
+        badgeIcon: 'fa-gears',
+        desc: '一連の処理をまとめて名前を付けたものを「メソッド」と呼びます。メソッドを使うことで、コードの再利用性が高まります。',
+        initialCode: `public class Main {
+    public static void main(String[] args) {
+        int result = addNumbers(5, 3);
+        System.out.println("足し算の結果: " + result);
+    }
+
+    public static int addNumbers(int a, int b) {
+        return a + b;
+    }
+}`,
+        expectedOutput: "足し算の結果: 8",
+        quiz: {
+          question: "値を何も返さないメソッドを定義するときに使用するキーワードはどれでしょうか？",
+          options: ["null", "static", "void", "return"],
+          correct: 2
+        }
+      }
+    ];
+
+    // --- アプリケーションの状態管理 ---
+    let currentModuleIndex = 0;
+    let userProgress = JSON.parse(localStorage.getItem('java_demo_progress')) || {
+      completedModules: [],
+      solvedQuizzes: []
+    };
+
+    // --- DOM要素 ---
+    const moduleListEl = document.getElementById('moduleList');
+    const badgeGridEl = document.getElementById('badgeGrid');
+    const moduleTitleEl = document.getElementById('moduleTitle');
+    const moduleDescEl = document.getElementById('moduleDesc');
+    const codeEditorEl = document.getElementById('codeEditor');
+    const outputBoxEl = document.getElementById('outputBox');
+    const runCodeBtn = document.getElementById('runCodeBtn');
+    const resetCodeBtn = document.getElementById('resetCodeBtn');
+    const quizQuestionEl = document.getElementById('quizQuestion');
+    const quizOptionsEl = document.getElementById('quizOptions');
+    const quizFeedbackEl = document.getElementById('quizFeedback');
+    const progressFillEl = document.getElementById('progressFill');
+    const progressTextEl = document.getElementById('progressText');
+    const themeToggleBtn = document.getElementById('themeToggle');
+
+    // --- 初期化処理 ---
+    function init() {
+      renderSidebar();
+      loadModule(0);
+      updateProgressUI();
+
+      // テーマの設定
+      const currentTheme = localStorage.getItem('theme') || 'dark';
+      document.body.setAttribute('data-theme', currentTheme);
+      updateThemeIcon(currentTheme);
+    }
+
+    // --- サイドバー描画 ---
+    function renderSidebar() {
+      moduleListEl.innerHTML = '';
+      badgeGridEl.innerHTML = '';
+
+      modules.forEach((mod, idx) => {
+        const isCompleted = userProgress.completedModules.includes(mod.id);
+        
+        // モジュールリスト
+        const li = document.createElement('li');
+        li.className = `module-item ${idx === currentModuleIndex ? 'active' : ''}`;
+        li.onclick = () => loadModule(idx);
+        li.innerHTML = `
+          <span>${mod.title}</span>
+          <i class="status-icon fa-solid ${isCompleted ? 'fa-circle-check' : 'fa-circle-notch'}" style="color: ${isCompleted ? 'var(--success)' : 'inherit'}"></i>
+        `;
+        moduleListEl.appendChild(li);
+
+        // バッジ
+        const isBadgeUnlocked = isCompleted && userProgress.solvedQuizzes.includes(mod.id);
+        const badgeDiv = document.createElement('div');
+        badgeDiv.className = `badge-item ${isBadgeUnlocked ? 'unlocked' : ''}`;
+        badgeDiv.innerHTML = `
+          <i class="fa-solid ${mod.badgeIcon}"></i>
+          <span class="badge-tooltip">${mod.badge}</span>
+        `;
+        badgeGridEl.appendChild(badgeDiv);
+      });
+    }
+
+    // --- モジュール読込 ---
+    function loadModule(index) {
+      currentModuleIndex = index;
+      const mod = modules[index];
+
+      moduleTitleEl.textContent = mod.title;
+      moduleDescEl.textContent = mod.desc;
+      codeEditorEl.value = mod.initialCode;
+      outputBoxEl.textContent = '// 実行ボタンを押すとここに結果が表示されます';
+
+      renderQuiz(mod);
+      renderSidebar();
+    }
+
+    // --- クイズ描画 ---
+    function renderQuiz(mod) {
+      quizQuestionEl.textContent = mod.quiz.question;
+      quizOptionsEl.innerHTML = '';
+      quizFeedbackEl.className = 'feedback-msg';
+      quizFeedbackEl.textContent = '';
+
+      const isSolved = userProgress.solvedQuizzes.includes(mod.id);
+
+      mod.quiz.options.forEach((opt, idx) => {
+        const btn = document.createElement('div');
+        btn.className = 'quiz-option';
+        btn.innerHTML = `<i class="fa-regular fa-circle"></i> <span>${opt}</span>`;
+        
+        if (isSolved && idx === mod.quiz.correct) {
+          btn.classList.add('correct');
+        }
+
+        btn.onclick = () => checkQuizAnswer(idx, mod.quiz.correct, btn);
+        quizOptionsEl.appendChild(btn);
+      });
+    }
+
+    // --- クイズ正誤判定 ---
+    function checkQuizAnswer(selectedIndex, correctIndex, optionEl) {
+      const mod = modules[currentModuleIndex];
+      const options = quizOptionsEl.querySelectorAll('.quiz-option');
+      
+      options.forEach(opt => opt.classList.remove('correct', 'incorrect'));
+
+      if (selectedIndex === correctIndex) {
+        optionEl.classList.add('correct');
+        quizFeedbackEl.textContent = '🎉 正解です！理解が深まりましたね。';
+        quizFeedbackEl.className = 'feedback-msg show success';
+
+        if (!userProgress.solvedQuizzes.includes(mod.id)) {
+          userProgress.solvedQuizzes.push(mod.id);
+          saveProgress();
+        }
+      } else {
+        optionEl.classList.add('incorrect');
+        quizFeedbackEl.textContent = '❌ 残念、不正解です。もう一度考えてみましょう！';
+        quizFeedbackEl.className = 'feedback-msg show error';
+      }
+    }
+
+    // --- 簡易Javaコード解析＆実行シミュレーター ---
+    function simulateJavaExecution(code) {
+      let logs = [];
+      
+      try {
+        // System.out.println の抽出・シミュレーション
+        const lines = code.split('\n');
+        
+        // 簡易的な変数スコープの解析
+        let variables = {};
+        
+        lines.forEach(line => {
+          let trimmed = line.trim();
+
+          // int 変数定義の読み取り (例: int age = 20;)
+          const intMatch = trimmed.match(/int\s+(\w+)\s*=\s*(\d+);/);
+          if (intMatch) {
+            variables[intMatch[1]] = parseInt(intMatch[2]);
+          }
+
+          // String 変数定義の読み取り (例: String name = "Java太郎";)
+          const stringMatch = trimmed.match(/String\s+(\w+)\s*=\s*"([^"]+)";/);
+          if (stringMatch) {
+            variables[stringMatch[1]] = stringMatch[2];
+          }
+
+          // System.out.println の検出
+          if (trimmed.startsWith('System.out.println')) {
+            const printContentMatch = trimmed.match(/System\.out\.println\((.*)\);/);
+            if (printContentMatch) {
+              let expr = printContentMatch[1];
+              
+              // 簡易文字列連結の評価
+              Object.keys(variables).forEach(varName => {
+                const regex = new RegExp('\\b' + varName + '\\b', 'g');
+                expr = expr.replace(regex, JSON.stringify(variables[varName]));
+              });
+
+              // 式の計算評価 (JavaScript evalの安全な代替)
+              try {
+                // "+"による文字列結合を処理
+                let evaluated = Function(`"use strict"; return (${expr})`)();
+                logs.push(evaluated);
+              } catch (e) {
+                logs.push(expr.replace(/"/g, ''));
+              }
+            }
+          }
+        });
+
+        if (logs.length === 0) {
+          return "実行完了 (出力なし)";
+        }
+        return logs.join('\n');
+
+      } catch (err) {
+        return `構文エラー (シミュレーション): ${err.message}`;
+      }
+    }
+
+    // --- コード実行アクション ---
+    runCodeBtn.onclick = () => {
+      const code = codeEditorEl.value;
+      const output = simulateJavaExecution(code);
+      outputBoxEl.textContent = output;
+
+      const currentMod = modules[currentModuleIndex];
+      // 簡易判定：正解出力と一致するかチェック
+      if (output.trim() === currentMod.expectedOutput.trim()) {
+        if (!userProgress.completedModules.includes(currentMod.id)) {
+          userProgress.completedModules.push(currentMod.id);
+          saveProgress();
+        }
+      }
+    };
+
+    // --- リセットアクション ---
+    resetCodeBtn.onclick = () => {
+      codeEditorEl.value = modules[currentModuleIndex].initialCode;
+      outputBoxEl.textContent = '// リセットされました';
+    };
+
+    // --- 進捗度の更新と保存 ---
+    function saveProgress() {
+      localStorage.setItem('java_demo_progress', JSON.stringify(userProgress));
+      updateProgressUI();
+      renderSidebar();
+    }
+
+    function updateProgressUI() {
+      const totalItems = modules.length * 2; // 各モジュール (クリア + クイズ)
+      const completedItems = userProgress.completedModules.length + userProgress.solvedQuizzes.length;
+      const percentage = Math.round((completedItems / totalItems) * 100);
+
+      progressFillEl.style.width = `${percentage}%`;
+      progressTextEl.textContent = `${percentage}%`;
+    }
+
+    // --- テーマ切り替え ---
+    themeToggleBtn.onclick = () => {
+      const currentTheme = document.body.getAttribute('data-theme');
+      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      document.body.setAttribute('data-theme', newTheme);
+      localStorage.setItem('theme', newTheme);
+      updateThemeIcon(newTheme);
+    };
+
+    function updateThemeIcon(theme) {
+      const icon = themeToggleBtn.querySelector('i');
+      if (theme === 'dark') {
+        icon.className = 'fa-solid fa-sun';
+      } else {
+        icon.className = 'fa-solid fa-moon';
+      }
+    }
+
+    // アプリ起動
+    init();
+  </script>
+</body>
+</html>
